@@ -1,56 +1,132 @@
-# Devsu Technical Test - Solución Full Stack
+# Devsu Technical Test
 
-Este repositorio contiene la solución completa de la prueba técnica para Devsu, compuesta por un Backend robusto en Java (Spring Boot) y un Frontend moderno en Angular 17+. Todo el entorno está orquestado a través de Docker para una ejecución "Zero-Config".
+Prueba técnica para Devsu. El proyecto es un monorepo con dos módulos independientes: una API REST en Spring Boot y una SPA en Angular, ambos contenerizados con Docker.
 
-## 🚀 Ejecución Rápida con Docker (Zero-Config)
-
-La aplicación está completamente dockerizada. Puedes levantar toda la infraestructura (Base de Datos en memoria, API REST y Aplicación Web) con un solo comando desde la raíz del proyecto:
+## Levantar el entorno
 
 ```bash
 docker-compose up --build -d
 ```
 
-### Accesos:
-- 🌐 **Frontend (Aplicación Web):** [http://localhost:4200](http://localhost:4200)
-- ⚙️ **Backend (API REST):** `http://localhost:8080/api`
-- 📚 **Swagger (Documentación Interactiva):** [http://localhost:8080/api/swagger-ui/index.html](http://localhost:8080/api/swagger-ui/index.html)
-- 🗄️ **Consola H2 Database:** [http://localhost:8080/api/h2-console](http://localhost:8080/api/h2-console)
-  - *JDBC URL:* `jdbc:h2:mem:devsudb` | *User:* `sa` | *Password:* `(vacío)`
+- Frontend: http://localhost:4200
+- API: http://localhost:8080/api
+- Swagger: http://localhost:8080/api/swagger-ui/index.html
+- H2 Console: http://localhost:8080/api/h2-console (`jdbc:h2:mem:devsudb`, user: `sa`, password: vacío)
 
-*(Nota: Al iniciar, el backend ejecutará automáticamente el script `BaseDatos.sql` poblando la base de datos con clientes y cuentas de prueba iniciales).*
+Al iniciar, el backend ejecuta `BaseDatos.sql` y carga los clientes y cuentas de prueba.
 
 ---
 
-## 💻 Arquitectura del Frontend (Angular 17+)
-El Frontend fue construido en la carpeta `/Frontend` aplicando estándares **Senior** y **Clean Architecture**:
+## Estructura del proyecto
 
-- **Core & Routing:** Uso de *Standalone Components*, *Signals* nativos y enrutamiento modularizado con *Lazy Loading* estricto para máxima optimización de la carga.
-- **Gestión de Estado (State Management):** Implementación del **Patrón Facade** apoyado fuertemente en **RxJS** (`BehaviorSubject`, `combineLatest`) para desacoplar completamente la lógica de negocio y las peticiones HTTP de la capa visual de los componentes.
-- **Rendimiento:** Implementación de `ChangeDetectionStrategy.OnPush` en toda la aplicación para evitar ciclos de detección de cambios innecesarios.
-- **UI/UX Custom:** Diseño con estilo *Glassmorphism* construido desde cero con CSS puro (variables `:root` globales), respetando la restricción de no depender de librerías de componentes UI externas (Bootstrap, Angular Material, etc).
-- **Formularios:** Formularios Reactivos (`ReactiveFormsModule`) con custom validators y feedback visual en tiempo real.
-- **Reportes:** Generación visual y dinámica de Estados de Cuenta con descarga nativa en PDF (renderizado en el lado del cliente con `jsPDF`).
-- **Manejo Global de Errores:** Implementación de un `HttpInterceptor` para capturar fallos de red y validaciones del backend, acoplado a un `GlobalErrorHandler` que notifica al usuario elegantemente a través de un servicio de Toasts propio.
+```
+TestBackendDevsu/
+├── backend/
+│   ├── src/
+│   │   ├── main/java/com/devsu/test/
+│   │   │   ├── config/           # CorsConfig
+│   │   │   ├── controller/       # ClienteController, CuentaController, MovimientoController, ReporteController
+│   │   │   ├── dto/              # ReporteDTO
+│   │   │   ├── entity/           # Persona, Cliente, Cuenta, Movimiento
+│   │   │   ├── exception/        # BusinessException, ResourceNotFoundException, GlobalExceptionHandler
+│   │   │   ├── repository/       # ClienteRepository, CuentaRepository, MovimientoRepository
+│   │   │   └── service/          # Interfaces + impl/
+│   │   └── test/                 # ClienteServiceImplTest, CuentaServiceImplTest, MovimientoServiceTest
+│   │                               ClienteControllerTest, CuentaControllerTest, ReporteControllerTest
+│   ├── BaseDatos.sql             # Datos iniciales (clientes + cuentas)
+│   └── Dockerfile                # Multi-stage: Maven → eclipse-temurin JRE 17
+│
+├── Frontend/
+│   ├── src/app/
+│   │   ├── core/
+│   │   │   ├── handlers/         # GlobalErrorHandler
+│   │   │   ├── interceptors/     # HttpInterceptor
+│   │   │   └── services/         # ApiService, ToastService
+│   │   └── features/
+│   │       ├── clientes/         # ClientesComponent, ClientesFacade
+│   │       ├── cuentas/          # CuentasComponent, CuentasFacade
+│   │       ├── movimientos/      # MovimientosComponent, MovimientosFacade
+│   │       └── reportes/         # ReportesComponent, ReportesFacade
+│   ├── setup-jest.ts             # Inicialización de TestBed para Jest
+│   ├── jest.config.js
+│   ├── nginx.conf                # SPA routing para producción
+│   └── Dockerfile                # Multi-stage: Node 20 → Nginx alpine
+│
+└── docker-compose.yml            # Orquesta backend + frontend
+
+```
 
 ---
 
-## ⚙️ Arquitectura del Backend (Java / Spring Boot)
-El Backend fue construido en la carpeta `/backend` manteniendo principios SOLID:
+## Backend (`/backend`)
 
-- **Tecnologías:** Java 17, Spring Boot 3.2, Spring Data JPA (Hibernate), Lombok.
-- **Diseño del Dominio:** Uso de herencia con estrategia `JOINED` para manejar eficientemente entidades como `Persona` y `Cliente`.
-- **Lógica de Negocio:** Validación estricta y ejecución atómica (`@Transactional`) para garantizar la consistencia de datos, previniendo saldos negativos y controlando matemáticamente el límite diario de retiros.
+Java 17 + Spring Boot 3.2 + Spring Data JPA + H2 + Lombok.
+
+La estructura sigue una separación de capas clásica: `controller → service → repository → entity`. Los servicios se acceden a través de interfaces para facilitar el testing con Mockito.
+
+El punto más crítico de la lógica de negocio está en `MovimientoServiceImpl`: la operación de registrar un movimiento valida el saldo disponible, aplica el límite diario de retiros de $1,000 y persiste el movimiento en una sola transacción (`@Transactional`). Si cualquier validación falla, todo se revierte.
+
+Los errores de negocio se centralizan en `GlobalExceptionHandler` (`@ControllerAdvice`), que convierte las excepciones de dominio (`BusinessException`, `ResourceNotFoundException`) en respuestas JSON con el código HTTP correspondiente.
+
+### Endpoints
+
+| Recurso | Métodos |
+|---|---|
+| `/api/clientes` | GET, POST, PUT, DELETE |
+| `/api/cuentas` | GET, POST, PATCH, DELETE |
+| `/api/movimientos` | GET, POST |
+| `/api/reportes` | GET (filtro por fechas y cliente) |
+
+### Pruebas
+
+```bash
+cd backend && ./mvnw clean test
+```
+
+Pruebas unitarias con JUnit 5 y Mockito sobre los tres servicios principales y con MockMvc sobre los controladores.
+
+### Correr sin Docker
+
+```bash
+cd backend && ./mvnw spring-boot:run
+```
 
 ---
 
-## 🧪 Pruebas Automatizadas (Testing)
-Ambas capas cuentan con infraestructura de pruebas automatizadas:
+## Frontend (`/Frontend`)
 
-- **Backend (JUnit 5 & Mockito):** Cobertura de la lógica transaccional y controladores HTTP.
-  ```bash
-  cd backend && ./mvnw clean test
-  ```
-- **Frontend (Jest):** Suite moderna configurada con el framework *Jest* (en reemplazo de Karma/Jasmine tradicional).
-  ```bash
-  cd Frontend && npm run test
-  ```
+Angular 21 con Standalone Components, Reactive Forms y RxJS. Estilos propios con CSS puro (glassmorphism via variables `--css`), sin librerías de componentes externas.
+
+Cada módulo de feature (`clientes`, `cuentas`, `movimientos`, `reportes`) tiene su propio Facade que mantiene el estado con `BehaviorSubject` y centraliza las llamadas a la API. Los componentes solo consumen observables y llaman métodos del Facade, lo que los hace completamente testeables de forma aislada.
+
+El módulo de reportes genera el PDF en el navegador con `jsPDF` porque el backend no expone ese endpoint; el frontend toma el JSON del estado de cuenta y construye la tabla directamente.
+
+Un `HttpInterceptor` intercepta los errores de red y de API antes de que lleguen a los componentes, y los redirige al `ToastService` (implementado con Signals).
+
+### Pruebas
+
+```bash
+cd Frontend && npm run test
+```
+
+Suite de Jest 30 con `jest-preset-angular`. El TestBed se inicializa con `BrowserDynamicTestingModule` en `setup-jest.ts`. Hay specs para el componente raíz y para el formulario reactivo de clientes (validaciones, flujo de guardado).
+
+### Correr sin Docker
+
+```bash
+cd Frontend
+npm install --legacy-peer-deps
+npm start
+```
+
+---
+
+## Base de Datos
+
+H2 en memoria. El esquema se genera automáticamente por Hibernate al arrancar. Los datos iniciales los inserta `BaseDatos.sql`:
+
+- **Jose Lema** → cuentas de ahorro ($2,000) y corriente ($1,000)
+- **Marianela Montalvo** → cuenta corriente ($100) y de ahorro ($540)
+- **Juan Osorio** → cuenta de ahorro ($0)
+
+El modelo tiene herencia entre `Persona` y `Cliente` con estrategia `JOINED` de JPA.
