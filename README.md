@@ -1,53 +1,56 @@
-# Devsu Backend Test - Solución
+# Devsu Technical Test - Solución Full Stack
 
-Este repositorio contiene la solución a la prueba técnica de Backend para Devsu, desarrollada con Java 17 y Spring Boot 3. Se han implementado estándares de la industria, incluyendo Clean Architecture, diseño RESTful, manejo transaccional atómico y documentación interactiva.
+Este repositorio contiene la solución completa de la prueba técnica para Devsu, compuesta por un Backend robusto en Java (Spring Boot) y un Frontend moderno en Angular 17+. Todo el entorno está orquestado a través de Docker para una ejecución "Zero-Config".
 
-## Arquitectura y Tecnologías
-- **Java 17** y **Spring Boot 3.2.x**
-- **Spring Data JPA** (Hibernate) con patrón de herencia `JOINED`.
-- **H2 Database** (Base de datos en memoria Zero-Config).
-- **JUnit 5 & Mockito** (Cobertura de pruebas unitarias sobre servicios y controladores).
-- **Docker & Docker Compose** (Contenedorización Multi-stage).
-- **Swagger / OpenAPI 3** (Documentación interactiva de la API).
-- **Lombok**
+## 🚀 Ejecución Rápida con Docker (Zero-Config)
 
-## Estructura del Proyecto
-El proyecto sigue principios de Clean Architecture y SOLID:
-- `controller/`: Endpoints RESTful (`/clientes`, `/cuentas`, `/movimientos`, `/reportes`).
-- `service/`: Lógica de negocio, control de límites diarios y validación de saldos (`@Transactional`).
-- `repository/`: Interfaces de acceso a datos (Patrón Repository).
-- `entity/`: Modelos del dominio fuertemente tipados.
-- `exception/`: Manejador global de excepciones (`@ControllerAdvice`).
-- `dto/`: Objetos de Transferencia de Datos.
-- `config/`: Configuración de CORS y seguridad.
+La aplicación está completamente dockerizada. Puedes levantar toda la infraestructura (Base de Datos en memoria, API REST y Aplicación Web) con un solo comando desde la raíz del proyecto:
 
-## Ejecución "Zero-Config" con Docker
-
-La aplicación está preparada para ejecutarse sin necesidad de instalar Maven o Java en la máquina host.
-
-1. Asegúrate de tener instalado [Docker](https://docs.docker.com/get-docker/) y [Docker Compose](https://docs.docker.com/compose/install/).
-2. Levanta el contenedor en la raíz del proyecto:
-   ```bash
-   docker-compose up --build -d
-   ```
-3. La API estará disponible en `http://localhost:8080/api`.
-
-*(Nota: Al iniciar, el contenedor ejecutará automáticamente el script `BaseDatos.sql` poblando la base de datos con los clientes y cuentas iniciales).*
-
-## Documentación y Consolas
-
-- **Swagger UI (Documentación Interactiva):**
-  `http://localhost:8080/api/swagger-ui/index.html`
-- **Consola H2 Database:**
-  `http://localhost:8080/api/h2-console`
-  - **JDBC URL:** `jdbc:h2:mem:devsudb`
-  - **User Name:** `sa`
-  - **Password:** *(vacío)*
-
-## Pruebas Automatizadas
-
-El proyecto cuenta con una sólida suite de pruebas unitarias cubriendo las reglas de negocio (fondos insuficientes, límite diario excedido) y los endpoints HTTP.
-Para ejecutar los test localmente:
 ```bash
-./mvnw clean test
+docker-compose up --build -d
 ```
+
+### Accesos:
+- 🌐 **Frontend (Aplicación Web):** [http://localhost:4200](http://localhost:4200)
+- ⚙️ **Backend (API REST):** `http://localhost:8080/api`
+- 📚 **Swagger (Documentación Interactiva):** [http://localhost:8080/api/swagger-ui/index.html](http://localhost:8080/api/swagger-ui/index.html)
+- 🗄️ **Consola H2 Database:** [http://localhost:8080/api/h2-console](http://localhost:8080/api/h2-console)
+  - *JDBC URL:* `jdbc:h2:mem:devsudb` | *User:* `sa` | *Password:* `(vacío)`
+
+*(Nota: Al iniciar, el backend ejecutará automáticamente el script `BaseDatos.sql` poblando la base de datos con clientes y cuentas de prueba iniciales).*
+
+---
+
+## 💻 Arquitectura del Frontend (Angular 17+)
+El Frontend fue construido en la carpeta `/Frontend` aplicando estándares **Senior** y **Clean Architecture**:
+
+- **Core & Routing:** Uso de *Standalone Components*, *Signals* nativos y enrutamiento modularizado con *Lazy Loading* estricto para máxima optimización de la carga.
+- **Gestión de Estado (State Management):** Implementación del **Patrón Facade** apoyado fuertemente en **RxJS** (`BehaviorSubject`, `combineLatest`) para desacoplar completamente la lógica de negocio y las peticiones HTTP de la capa visual de los componentes.
+- **Rendimiento:** Implementación de `ChangeDetectionStrategy.OnPush` en toda la aplicación para evitar ciclos de detección de cambios innecesarios.
+- **UI/UX Custom:** Diseño con estilo *Glassmorphism* construido desde cero con CSS puro (variables `:root` globales), respetando la restricción de no depender de librerías de componentes UI externas (Bootstrap, Angular Material, etc).
+- **Formularios:** Formularios Reactivos (`ReactiveFormsModule`) con custom validators y feedback visual en tiempo real.
+- **Reportes:** Generación visual y dinámica de Estados de Cuenta con descarga nativa en PDF (renderizado en el lado del cliente con `jsPDF`).
+- **Manejo Global de Errores:** Implementación de un `HttpInterceptor` para capturar fallos de red y validaciones del backend, acoplado a un `GlobalErrorHandler` que notifica al usuario elegantemente a través de un servicio de Toasts propio.
+
+---
+
+## ⚙️ Arquitectura del Backend (Java / Spring Boot)
+El Backend fue construido en la carpeta `/backend` manteniendo principios SOLID:
+
+- **Tecnologías:** Java 17, Spring Boot 3.2, Spring Data JPA (Hibernate), Lombok.
+- **Diseño del Dominio:** Uso de herencia con estrategia `JOINED` para manejar eficientemente entidades como `Persona` y `Cliente`.
+- **Lógica de Negocio:** Validación estricta y ejecución atómica (`@Transactional`) para garantizar la consistencia de datos, previniendo saldos negativos y controlando matemáticamente el límite diario de retiros.
+
+---
+
+## 🧪 Pruebas Automatizadas (Testing)
+Ambas capas cuentan con infraestructura de pruebas automatizadas:
+
+- **Backend (JUnit 5 & Mockito):** Cobertura de la lógica transaccional y controladores HTTP.
+  ```bash
+  cd backend && ./mvnw clean test
+  ```
+- **Frontend (Jest):** Suite moderna configurada con el framework *Jest* (en reemplazo de Karma/Jasmine tradicional).
+  ```bash
+  cd Frontend && npm run test
+  ```
