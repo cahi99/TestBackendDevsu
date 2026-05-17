@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -95,19 +96,29 @@ public class MovimientoServiceImpl implements MovimientoService {
     public List<ReporteDTO> generarReporte(LocalDateTime fechaInicio, LocalDateTime fechaFin, Long clienteId) {
         List<Movimiento> movimientos = movimientoRepository.findMovimientosByClienteAndFecha(clienteId, fechaInicio, fechaFin);
         
+
+        Collections.reverse(movimientos);
+        
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-        return movimientos.stream().map(m -> ReporteDTO.builder()
+        List<ReporteDTO> reporte = movimientos.stream().map(m -> {
+            BigDecimal saldoInicialTransaccion = m.getSaldo().subtract(m.getValor());
+            
+            return ReporteDTO.builder()
                 .fecha(m.getFecha().format(formatter))
                 .cliente(m.getCuenta().getCliente().getNombre())
                 .numeroCuenta(m.getCuenta().getNumeroCuenta())
                 .tipo(m.getCuenta().getTipoCuenta())
-                .saldoInicial(m.getCuenta().getSaldoInicial())
+                .saldoInicial(saldoInicialTransaccion)
                 .estado(m.getCuenta().getEstado())
                 .movimiento(m.getValor())
                 .saldoDisponible(m.getSaldo())
-                .build()
-        ).collect(Collectors.toList());
+                .build();
+        }).collect(Collectors.toList());
+        
+        Collections.reverse(reporte);
+        
+        return reporte;
     }
 
     private BigDecimal obtenerSaldoActual(String numeroCuenta) {

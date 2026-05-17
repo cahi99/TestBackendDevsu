@@ -27,7 +27,6 @@ public class ReporteController {
             @RequestParam("fechaFin") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin,
             @RequestParam("clienteId") Long clienteId) {
 
-        // Convertimos las fechas ingresadas (YYYY-MM-DD) a rangos completos de tiempo.
         LocalDateTime inicio = fechaInicio.atStartOfDay();
         LocalDateTime fin = fechaFin.atTime(23, 59, 59, 999999999);
 

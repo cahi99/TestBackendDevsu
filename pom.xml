@@ -42,7 +42,14 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Lombok (Opcional, para simplificar código) -->
+        <!-- Swagger (OpenAPI 3) -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.3.0</version>
+        </dependency>
+
+        <!-- Lombok  -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

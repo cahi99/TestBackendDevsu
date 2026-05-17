@@ -1,0 +1,6 @@
+com/devsu/test/service/CuentaServiceImplTest.class
+com/devsu/test/controller/CuentaControllerTest.class
+com/devsu/test/service/MovimientoServiceTest.class
+com/devsu/test/controller/ReporteControllerTest.class
+com/devsu/test/service/ClienteServiceImplTest.class
+com/devsu/test/controller/ClienteControllerTest.class

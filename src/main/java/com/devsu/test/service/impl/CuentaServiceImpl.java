@@ -44,8 +44,7 @@ public class CuentaServiceImpl implements CuentaService {
         cuentaExistente.setTipoCuenta(cuenta.getTipoCuenta());
         cuentaExistente.setEstado(cuenta.getEstado());
         
-        // No permitimos actualizar el saldo inicial ni el número de cuenta aquí
-        
+
         if (cuenta.getCliente() != null && cuenta.getCliente().getId() != null) {
             Cliente cliente = clienteService.findById(cuenta.getCliente().getId());
             cuentaExistente.setCliente(cliente);

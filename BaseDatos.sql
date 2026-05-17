@@ -11,6 +11,9 @@ INSERT INTO cliente (cliente_id, contrasena, estado) VALUES (2, '5678', true);
 INSERT INTO persona (id, nombre, direccion, telefono, edad, genero, identificacion) VALUES (3, 'Juan Osorio', '13 junio y Equinoccial', '098874587', 35, 'Masculino', '1000000003');
 INSERT INTO cliente (cliente_id, contrasena, estado) VALUES (3, '1245', true);
 
+-- Ajustar las secuencias autoincrementales de H2 para evitar colisiones con los IDs insertados manualmente
+ALTER TABLE persona ALTER COLUMN id RESTART WITH 4;
+
 -- Insertar Datos de Cuentas
 INSERT INTO cuenta (numero_cuenta, tipo_cuenta, saldo_inicial, estado, cliente_id) VALUES ('478758', 'Ahorro', 2000.00, true, 1);
 INSERT INTO cuenta (numero_cuenta, tipo_cuenta, saldo_inicial, estado, cliente_id) VALUES ('225487', 'Corriente', 100.00, true, 2);
