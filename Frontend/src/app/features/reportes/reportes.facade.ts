@@ -3,6 +3,8 @@ import { ApiService } from '../../core/services/api.service';
 import { ToastService } from '../../core/services/toast.service';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 @Injectable()
 export class ReportesFacade {
@@ -19,39 +21,36 @@ export class ReportesFacade {
   }
 
   descargarPDF(inicio: string, fin: string, clienteId: number) {
-    this.api.getReportePdf(inicio, fin, clienteId).subscribe((response: any) => {
-      // Extract Base64 string. Fallback logic depending on how backend sends it.
-      const base64String = typeof response === 'string' ? response : response.base64;
-      
-      if (!base64String) {
-        this.toast.show('El backend no retornó el Base64', 'error');
+    this.api.getReportes(inicio, fin, clienteId).subscribe((data: any[]) => {
+      const reportes = data || [];
+      if (reportes.length === 0) {
+        this.toast.show('No hay datos para generar el PDF', 'error');
         return;
       }
-      
-      this.downloadBase64Pdf(base64String, 'estado_de_cuenta.pdf');
-    });
-  }
 
-  private downloadBase64Pdf(base64: string, fileName: string) {
-    const byteCharacters = atob(base64);
-    const byteNumbers = new Array(byteCharacters.length);
-    
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: 'application/pdf' });
-    
-    const url = window.URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = fileName;
-    document.body.appendChild(anchor);
-    anchor.click();
-    document.body.removeChild(anchor);
-    window.URL.revokeObjectURL(url);
-    
-    this.toast.show('PDF descargado exitosamente', 'success');
+      const doc = new jsPDF();
+      doc.text(`Estado de Cuenta - Cliente ${clienteId}`, 14, 15);
+      doc.text(`Desde: ${inicio} Hasta: ${fin}`, 14, 25);
+
+      const tableData = reportes.map(r => [
+        r.fecha || '-',
+        r.cliente || '-',
+        r.numeroCuenta || '-',
+        r.tipo || '-',
+        `$${r.saldoInicial || '0.00'}`,
+        r.estado ? 'Activa' : 'Inactiva',
+        `$${r.movimiento || '0.00'}`,
+        `$${r.saldoDisponible || '0.00'}`
+      ]);
+
+      autoTable(doc, {
+        startY: 30,
+        head: [['Fecha', 'Cliente', 'Numero Cuenta', 'Tipo', 'Saldo Inicial', 'Estado', 'Movimiento', 'Saldo Disponible']],
+        body: tableData,
+      });
+
+      doc.save(`Reporte_${clienteId}_${inicio}.pdf`);
+      this.toast.show('PDF descargado exitosamente', 'success');
+    });
   }
 }
