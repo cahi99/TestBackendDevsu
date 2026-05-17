@@ -10,6 +10,7 @@ class MockClientesFacade {
   loadClientes = jest.fn();
   search = jest.fn();
   saveCliente = jest.fn().mockReturnValue(of({}));
+  deleteCliente = jest.fn();
 }
 
 describe('ClientesComponent', () => {
