@@ -1,0 +1,26 @@
+<div class="app-container">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h1>BANCO</h1>
+    </div>
+    <nav class="sidebar-nav">
+      <a routerLink="/clientes" routerLinkActive="active" class="nav-btn">Clientes</a>
+      <a routerLink="/cuentas" routerLinkActive="active" class="nav-btn">Cuentas</a>
+      <a routerLink="/movimientos" routerLinkActive="active" class="nav-btn">Movimientos</a>
+      <a routerLink="/reportes" routerLinkActive="active" class="nav-btn">Reportes</a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container">
+  @for (toast of toastService.toasts(); track toast.id) {
+    <div class="toast" [class]="toast.type">
+      {{ toast.message }}
+    </div>
+  }
+</div>
