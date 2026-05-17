@@ -3,7 +3,7 @@ version: '3.8'
 services:
   app:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
     image: devsu-backend-test:latest
     container_name: devsu-backend-app
